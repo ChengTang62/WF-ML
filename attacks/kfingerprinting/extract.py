@@ -23,9 +23,6 @@ def init_logger():
 
 
 ### Parameters ###
-
-
-
 # -1 is IN, 1 is OUT
 #file format: "direction time size"
 
@@ -391,20 +388,24 @@ def parallel(flist,n_jobs = 20):
 def extractfeature(f):
     global MON_SITE_NUM
     fname = f.split('/')[-1].split(".")[0]
-    # logger.info('Processing %s...'%fname)
+    logger.info('Processing %s...'%fname)
     try:
-        with open(f,'r') as f:
-            tcp_dump = f.readlines()
+        print("trying")
+        with open(f,'r') as file:
+            tcp_dump = file.readlines()
             if len(tcp_dump) < 50:
+                print("none")
                 return None
         feature = TOTAL_FEATURES(tcp_dump)
+        print(feature)
         if '-' in fname:
             label = fname.split('-')
             label = (int(label[0]), int(label[1]))
         else:
             label = (MON_SITE_NUM, int(fname))
         return (feature,label)
-    except:
+    except Exception as e:
+        print("exception:", str(e))
         return None
 
 
@@ -432,13 +433,15 @@ if __name__== '__main__':
                         default = ".cell", )
     args = parser.parse_args()
     data_dict = {'feature':[],'label':[]}
-  
 
     flist = []
     for i in range(MON_SITE_NUM):
         for j in range(MON_INST_NUM):
             if os.path.exists( os.path.join(args.traces_path, str(i) + "-" + str(j)+ args.format) ):
+#                 print("path exists:", os.path.join(args.traces_path, str(i) + "-" + str(j)+ args.format) )
                 flist.append(os.path.join(args.traces_path, str(i) + "-" + str(j)+ args.format) )
+#             else:
+#                 print("path does not exist:", os.path.join(args.traces_path, str(i) + "-" + str(j)+ args.format) )
     for i in range(UNMON_SITE_NUM):
         if os.path.exists( os.path.join(args.traces_path, str(i)+ args.format) ):
             flist.append( os.path.join(args.traces_path, str(i)+ args.format) )
@@ -453,5 +456,3 @@ if __name__== '__main__':
     np.save(outputdir,data_dict)        
 
     # logger.info('Save to %s.npy'%outputdir)
-
-

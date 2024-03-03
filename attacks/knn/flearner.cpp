@@ -497,13 +497,29 @@ int get_featnum(string folder) {
 	ostringstream freadnamestream;
 	freadnamestream << folder << "0-0.cellkNN";
 	string freadname = freadnamestream.str();
-	
-	ifstream fread;
-	fread.open(freadname.c_str());
-	// string str = "";
-	// getline(fread, str);
-	int feat_count = 0;
+    
+    ifstream fread(freadname.c_str());
+    if (!fread.is_open()) {
+        cerr << "Failed to open file: " << freadname << endl;
+        return 0;
+    }
+
+    int feat_count = 0;
+    string str;
+    while (getline(fread, str)) {
+        if (!str.empty()) {  // Optional: Skip empty lines
+            feat_count += 1;
+        }
+    }
+
+    if (feat_count == 0) {
+        cerr << "File is empty or only contains whitespace: " << freadname << endl;
+    }
+
+    return feat_count;
+
 	while(fread.peek()!=EOF){
+        printf("here\n");
 		string str = "";
 		getline(fread, str);
 		feat_count += 1;
@@ -522,17 +538,6 @@ int get_featnum(string folder) {
 
 
 int main(int argc, char** argv) {
-	/*int OPENTEST_list [6] = {100, 500, 1000, 3000, 5000, 6000};
-	int NEIGHBOUR_list [10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-
-	if(argc == 3){
-		int OPENTEST_ind = atoi(argv[1]); 
-		int NEIGHBOUR_ind = atoi(argv[2]);
-
-		OPEN_INSTNUM = OPENTEST_list[OPENTEST_ind % 5];
-		NEIGHBOUR_NUM = NEIGHBOUR_list[NEIGHBOUR_ind % 10];
-	}*/
-
 	srand(time(NULL));
 
 	if(argc != 3){
@@ -558,6 +563,7 @@ int main(int argc, char** argv) {
 	cout<<FEAT_NUM<<endl;
 	//learn weights
 	int wlen = read_filelen(trainlist);
+    cout<<wlen<<endl;
 
 	float** wfeat = new float*[wlen];
 	int * wfeatclasses;

@@ -74,7 +74,7 @@ def load_cell(fname, time=0, ext=".cell"):
             #not truly implemented
             data = list(lines[0])            
     except:
-        print "Could not load", fname
+        print("Could not load", fname)
     return data
 
 def load_cellt(fname, ext=".cell"):
@@ -128,7 +128,7 @@ def load_set(d, site=-1, inst=-1, time=0, ext=".cell"):
 
 def load_all(CLOSED_SITENUM, CLOSED_INSTNUM, OPEN_INSTNUM, INPUT_LOC, time=0):
     #deprecated; do not call
-    print "deprecated: call load_set"
+    print("deprecated: call load_set")
     sys.exit(0)
 
 def kfold(data, fi, foldtotal):

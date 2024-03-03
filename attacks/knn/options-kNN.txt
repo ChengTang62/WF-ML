@@ -1,14 +1,14 @@
 #for all attacks
 OPEN	1
-DATA_LOC	/Users/aaron/websiteFingerprinting/data/
-OUTPUT_LOC	/Users/aaron/websiteFingerprinting/attack/knn/output/
+DATA_LOC	/Users/ct/Library/Mobile Documents/com~apple~CloudDocs/cybersecurity_robotics/WebsiteFingerprinting/attacks/knn/
+OUTPUT_LOC	/Users/ct/Library/Mobile Documents/com~apple~CloudDocs/cybersecurity_robotics/WebsiteFingerprinting/attacks/knn/output/
 
 
 #for gen-list
-CLOSED_SITENUM	10
-CLOSED_INSTNUM	90
-OPEN_INSTNUM	9000
+CLOSED_SITENUM	4
+CLOSED_INSTNUM	99
+OPEN_INSTNUM	0
 DATA_TYPE	cell
-FOLD_NUM	1
+FOLD_NUM	10
 FOLD_MODE	3
  

@@ -58,7 +58,7 @@ def extract(times, sizes, features):
         else:
             features.append(count)
             count = 0
-    for i in range(len(sizes)/30, 100):
+    for i in range(len(sizes)//30, 100):
         features.append(0)
 
     #Bursts
@@ -146,9 +146,9 @@ try:
     optfname = sys.argv[1]
     d = load_options(optfname)
     data_name = sys.argv[2]
-    print data_name
-except Exception,e:
-    print sys.argv[0], str(e)
+    print(data_name)
+except Exception as e:
+    print(sys.argv[0], str(e))
     sys.exit(0)
 
 flist = []
