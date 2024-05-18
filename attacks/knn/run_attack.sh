@@ -12,12 +12,12 @@
 # rm -rf output/*
 
 # extract features
-python2.7 fextractor.py ./options-kNN.txt $1
+python fextractor.py ./options-kNN.txt $1
 
 #genlist
 for i in {0..9}
 do
-	python2.7 gen-list.py ./options-kNN.txt $i $1>> $2
+	python gen-list.py ./options-kNN.txt $i $1>> $2
 
 	# compile attack
 	g++ flearner.cpp -o flearner
@@ -25,7 +25,6 @@ do
 	# run attack
 	./flearner ./options-kNN.txt $1>> $2
 done
-
 # print accuracy
 # echo "Accuracy (plus/minus 1% variance):"
 # cat accuracy
