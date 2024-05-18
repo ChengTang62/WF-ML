@@ -71,7 +71,7 @@ def parse(fpath):
             continue    
     return t
 
-def extract(sinste):
+def extract(sinste,f):
     #sinste: list of packet sizes
 
     #first 4 features
@@ -80,7 +80,6 @@ def extract(sinste):
     outsize = 0
     inpacket = 0
     outpacket = 0
-
     for i in range(0, len(sinste)):
         if sinste[i] > 0:
             outsize += sinste[i]
@@ -102,44 +101,47 @@ def extract(sinste):
         x += abs(sinste[si])
         y += sinste[si]
         graph.append([x, y])
+    if not graph:
+        logger.warn("Graph is empty, cannot derive interpolants")
+        print(f)
+    else:
+      #derive interpolants
+      max_x = graph[-1][0] 
+      gap = float(max_x)/n
+      cur_x = 0
+      cur_y = 0
+      graph_ptr = 0
 
-    #derive interpolants
-    max_x = graph[-1][0] 
-    gap = float(max_x)/n
-    cur_x = 0
-    cur_y = 0
-    graph_ptr = 0
+      for i in range(0, n):
+          #take linear line between cur_x and cur_x + gap
+          next_x = cur_x + gap
+          while (graph[graph_ptr][0] < next_x):
+              graph_ptr += 1
+              if (graph_ptr >= len(graph) - 1):
+                  graph_ptr = len(graph) - 1
+                  #wouldn't be necessary if floats were floats
+                  break
+  ##        print "graph_ptr=", graph_ptr
+          next_pt_y = graph[graph_ptr][1] #not next_y 
+          next_pt_x = graph[graph_ptr][0]
+          cur_pt_y = graph[graph_ptr-1][1]
+          cur_pt_x = graph[graph_ptr-1][0]
+  ##        print "lines are", cur_pt_x, cur_pt_y, next_pt_x, next_pt_y
 
-    for i in range(0, n):
-        #take linear line between cur_x and cur_x + gap
-        next_x = cur_x + gap
-        while (graph[graph_ptr][0] < next_x):
-            graph_ptr += 1
-            if (graph_ptr >= len(graph) - 1):
-                graph_ptr = len(graph) - 1
-                #wouldn't be necessary if floats were floats
-                break
-##        print "graph_ptr=", graph_ptr
-        next_pt_y = graph[graph_ptr][1] #not next_y 
-        next_pt_x = graph[graph_ptr][0]
-        cur_pt_y = graph[graph_ptr-1][1]
-        cur_pt_x = graph[graph_ptr-1][0]
-##        print "lines are", cur_pt_x, cur_pt_y, next_pt_x, next_pt_y
+          if (next_pt_x - cur_pt_x != 0):
+              slope = (next_pt_y - cur_pt_y)/(next_pt_x - cur_pt_x)
+          else:
+              slope = 1000
+          next_y = slope * (next_x - cur_pt_x) + cur_pt_y
 
-        if (next_pt_x - cur_pt_x != 0):
-            slope = (next_pt_y - cur_pt_y)/(next_pt_x - cur_pt_x)
-        else:
-            slope = 1000
-        next_y = slope * (next_x - cur_pt_x) + cur_pt_y
+  ##        print "xy are", cur_x, cur_y, next_x, next_y, max_x
+          interpolant = (next_y - cur_y)/(next_x - cur_x)
+          # features.append(interpolant)
+          features.append(next_y)
+          cur_x = next_x
+          cur_y = next_y
 
-##        print "xy are", cur_x, cur_y, next_x, next_y, max_x
-        interpolant = (next_y - cur_y)/(next_x - cur_x)
-        # features.append(interpolant)
-        features.append(next_y)
-        cur_x = next_x
-        cur_y = next_y
-
-    return features
+      return features
 def parallel(flist,n_jobs = 20): 
     pool = mp.Pool(n_jobs)
     data_dict = pool.map(extractfeature, flist)
@@ -149,7 +151,7 @@ def parallel(flist,n_jobs = 20):
 def extractfeature(f, MON_SITE_NUM = 100):
     fname = f.split('/')[-1].split(".")[0]
     # logger.info('Processing %s...'%f)
-    features = extract(parse(f))
+    features = extract(parse(f),f)
     if '-' in fname:
         label = int(fname.split('-')[0])
     else:

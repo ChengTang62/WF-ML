@@ -1,101 +1,47 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Nov 10 16:28:28 2018
-
-@author: aaron
-"""
-from main import score_func, read_conf
 import constants as ct
 import argparse
-import joblib 
+import joblib
 import numpy as np
-from sklearn import preprocessing
+from sklearn import preprocessing, metrics
+from sklearn.model_selection import StratifiedKFold
+from sklearn.ensemble import RandomForestClassifier
+from math import sqrt
 
+def cross_validate(X, y, k):
+    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+    accuracies = []
 
-def parse_arguments():
+    for train_index, test_index in skf.split(X, y):
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        scaler = preprocessing.MinMaxScaler((-1, 1))
+        X_train = scaler.fit_transform(X_train)
+        X_test = scaler.transform(X_test)
+        model = RandomForestClassifier(n_estimators=100, random_state=42) 
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        accuracy = metrics.accuracy_score(y_test, y_pred)
+        accuracies.append(accuracy)
+    return accuracies
 
-    parser = argparse.ArgumentParser(description='Evaluate.')
-
-    parser.add_argument('-m',
-                        metavar='<model path>',
-                        help='Path to the directory of the model')
-    parser.add_argument('-p',
-                        metavar='<feature path>',
-                        help='Path to the directory of the extracted features')
-    parser.add_argument('-o',
-                        metavar='<feature path>',
-                        help='Path to the directory of the extracted features')    
-
-    parser.add_argument('--log',
-                        type=str,
-                        dest="log",
-                        metavar='<log path>',
-                        default='stdout',
-                        help='path to the log file. It will print to stdout by default.')
-    # Parse arguments
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="10 fold cross-validation for cumul attack")
+    parser.add_argument("feature_dic", help="Extracted features file path.")
     args = parser.parse_args()
-    return args
-
-def score_func(ground_truths, predictions):
-    global MON_SITE_NUM
-    tp, wp, fp, p, n = 0, 0, 0, 0 ,0
-    for truth,prediction in zip(ground_truths, predictions):
-        if truth != MON_SITE_NUM:
-            p += 1
-        else:
-            n += 1
-        if prediction != MON_SITE_NUM:
-            if truth == prediction:
-                tp += 1
-            else:
-                if truth != MON_SITE_NUM:
-                    wp += 1
-                    # logger.info('Wrong positive:%d %d'%(truth, prediction))
-                else:
-                    fp += 1
-                    # logger.info('False positive:%d %d'%(truth, prediction))
-    print('{} {} {} {} {}'.format(tp, wp, fp, p, n))
-    try:
-        r_precision = tp*n / (tp*n+wp*n+r*p*fp)
-    except:
-        r_precision = 0.0
-    # logger.info('r-precision:%.4f',r_precision)
-    # return r_precision
-    return tp/p
-
-
-
-
-    
-if __name__ == '__main__':    
-    global MON_SITE_NUM
-    args = parse_arguments()
-    # logger.info("Arguments: %s" % (args))
-    cf = read_conf(ct.confdir)
-    MON_SITE_NUM = int(cf['monitored_site_num'])
-
-    
-    
-    model =  joblib.load(args.m)
-    
-    
-
-
-    # logger.info('loading original data...')
-    dic = np.load(args.o, allow_pickle=True).item()   
-    X = np.array(dic['feature'])
-    y = np.array(dic['label'])    
-    #normalize the data
-    scaler = preprocessing.MinMaxScaler((-1,1))
-    scaler.fit(X)
-
-    # logger.info('loading test data...')
-    dic = np.load(args.p, allow_pickle=True).item()   
+    dic = np.load(args.feature_dic, allow_pickle=True).item()
     X = np.array(dic['feature'])
     y = np.array(dic['label'])
-    X = scaler.transform(X)
-    # logger.info('data are transformed into [-1,1]')
-
-    y_pred = model.predict(X)
-    score_func(y, y_pred)
+    acc_scores = cross_validate(X, y, 10)
+    mean_accuracy = np.mean(acc_scores)
+    std_dev = np.std(acc_scores)
+    print('cumul')
+    print('10-fold Cross Validation Accuracy Scores:', acc_scores)
+    print('Mean Accuracy:', mean_accuracy)
+    print('Standard Deviation of Accuracy:', std_dev)
+    print(acc_scores)
+    z_value = 1.96
+    margin_of_error = z_value * (std_dev / sqrt(10))
+    lower_bound = mean_accuracy - margin_of_error
+    upper_bound = mean_accuracy + margin_of_error
+    confidence_interval = (lower_bound, upper_bound)
+    print("95% Confidence Interval: {:.4f} to {:.4f}".format(*confidence_interval))    
