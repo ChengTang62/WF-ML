@@ -60,8 +60,11 @@ def kfingerprinting(X, y):
     return model, feature_importances
 
 if __name__ == '__main__':
-
-    dic = np.load("/Users/ct/Library/Mobile Documents/com~apple~CloudDocs/cybersecurity_robotics/WebsiteFingerprinting/attacks/kfingerprinting/results/torque_data.npy", allow_pickle=True).item()
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("feature_file", help="Path to extracted feature .npy")
+    args = parser.parse_args()
+    dic = np.load(args.feature_file, allow_pickle=True).item()    
     
     X = np.array(dic['feature'])
     Y = np.array(dic['label'])
